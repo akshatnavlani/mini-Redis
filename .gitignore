@@ -1,0 +1,10 @@
+# Add Rust build output so generated files are not committed.
+# The standard entry is: /target/
+target/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
