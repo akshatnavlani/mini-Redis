@@ -1,6 +1,5 @@
 # Add Rust build output so generated files are not committed.
 # The standard entry is: /target/
-target/
 .env
 .env.*
 !.env.example
@@ -8,3 +7,7 @@ target/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Added by cargo
+
+/target

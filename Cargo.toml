@@ -1,10 +1,10 @@
+[package]
+name = "mini-redis"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
 # Project manifest to complete yourself.
-#
-# Add the package metadata first:
-# - name: mini-redis
-# - version: 0.1.0
-# - edition: 2021
-#
 # Add these runtime dependencies and enable only the features you need:
 # - tokio: async runtime, TCP, tasks, locks, timers, and macros.
 # - bytes: efficient byte buffers and binary-safe values.
