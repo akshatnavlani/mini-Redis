@@ -2,7 +2,7 @@
 //
 // Add imports for the output byte buffer and the RESP response types.
 use bytes::{Bytes,BytesMut};
-use super::parser::Frame;
+use super::Response;
 // Function reference: RESP-ENCODER-001
 // Function name: encode_frame
 // Input: a typed RESP response.
@@ -12,33 +12,33 @@ use super::parser::Frame;
 // Why it exists: Redis clients use the prefix to determine how to interpret the
 // response; one malformed prefix can corrupt every later response.
 
-pub fn encode_frame(frame: &Frame)-> Bytes{
+pub fn encode_frame(frame: &Response)-> Bytes{
     match frame{
-        Frame::SimpleString(value)=>{
+        Response::SimpleString(value)=>{
             let mut buffer = BytesMut::new();
             buffer.extend_from_slice(b"+");
             buffer.extend_from_slice(value);
             buffer.extend_from_slice(b"\r\n");
             buffer.freeze()
         }
-        Frame::Error(value)=>{
+        Response::Error(value)=>{
             let mut buffer = BytesMut::new();
             buffer.extend_from_slice(b"-");
             buffer.extend_from_slice(value);
             buffer.extend_from_slice(b"\r\n");
             buffer.freeze()
         }
-        Frame::Integer(value)=>{
+        Response::Integer(value)=>{
             let mut buffer = BytesMut::new();
             buffer.extend_from_slice(b":");
             buffer.extend_from_slice(value.to_string().as_bytes());
             buffer.extend_from_slice(b"\r\n");
             buffer.freeze()
         }
-        Frame::BulkString(value)=>{
-            encode_bulk_string(*value)
+        Response::BulkString(value)=>{
+            encode_bulk_string(value.as_deref())
         }
-        Frame::Array(elements)=>{
+        Response::Array(elements)=>{
             let mut buffer = BytesMut::new();
             buffer.extend_from_slice(b"*");
             buffer.extend_from_slice(elements.len().to_string().as_bytes());

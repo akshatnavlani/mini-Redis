@@ -1,6 +1,7 @@
 // Entry point file.
 //
 // Add imports for:
+
 // - clap, to parse port, maximum-key, and sweep-interval options.
 // - tokio, to create the async runtime.
 // - tracing-subscriber, to configure structured logging.
@@ -14,3 +15,6 @@
 // runtime, and hand control to the server module.
 // Why it exists: Keep startup concerns in one place and keep networking logic
 // testable outside the process entry point.
+fn main(){
+    println!("Hello, mini-Redis!");
+}

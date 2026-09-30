@@ -4,9 +4,24 @@
 // encoder.rs. Re-export only the protocol types the command and server layers
 // actually need.
 //
+use bytes::Bytes;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Response {
+    SimpleString(Bytes),
+    Error(Bytes),
+    Integer(i64),
+    BulkString(Option<Bytes>),
+    Array(Vec<Response>),
+}
+
 mod encoder;
 mod parser;
-pub use parser::{parse_frame, Frame, FrameParseResult, ParseError};
+pub use parser::{
+    parse_frame, 
+    Frame, 
+    FrameParseResult, 
+    ParseError
+};
 pub use encoder::encode_frame;
 // Function reference: RESP-MOD-001
 // Function name: parse_frame
