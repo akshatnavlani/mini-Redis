@@ -4,6 +4,8 @@
 // encoder.rs. Re-export only the protocol types the command and server layers
 // actually need.
 //
+pub mod encoder;
+pub mod parser;
 // Function reference: RESP-MOD-001
 // Function name: parse_frame
 // Input: a mutable byte buffer containing received TCP bytes.
