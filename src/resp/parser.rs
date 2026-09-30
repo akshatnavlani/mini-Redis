@@ -122,7 +122,7 @@ pub fn parse_frame(input: &[u8],start_position: usize) -> Result<FrameParseResul
 // Why it exists: RESP requires CRLF, and accepting incomplete delimiters causes
 // stream desynchronization.
 #[derive(Debug, PartialEq, Eq)]
-pub enum LineParseResult<'a>{
+enum LineParseResult<'a>{
     Complete{
         line: &'a [u8],
         next_position: usize,
@@ -135,7 +135,7 @@ pub enum ParseError{
     InvalidLineEnding,
 }
 
-pub fn parse_line(input:&[u8],start_position:usize)->Result<LineParseResult<'_>,ParseError>{
+fn parse_line(input:&[u8],start_position:usize)->Result<LineParseResult<'_>,ParseError>{
     if start_position> input.len(){
         return Err(ParseError::InvalidStartPosition);
     }
@@ -172,7 +172,7 @@ pub fn parse_line(input:&[u8],start_position:usize)->Result<LineParseResult<'_>,
 // Description: Read the declared byte length, payload, and trailing CRLF.
 // Why it exists: Bulk strings are binary-safe and their declared byte length is
 // more reliable than searching for a delimiter in the payload.
-pub enum BulkStringResult<'a>{
+enum BulkStringResult<'a>{
     Complete{
         value: Option<&'a [u8]>,
         next_position:usize,
@@ -239,7 +239,7 @@ pub enum ArrayParseResult<'a>{
     Incomplete,
 }
 
-pub fn parse_array(input: &[u8],start_position:usize)-> Result<ArrayParseResult<'_>,ParseError>{
+fn parse_array(input: &[u8],start_position:usize)-> Result<ArrayParseResult<'_>,ParseError>{
     if start_position>=input.len(){
         return Ok(ArrayParseResult::Incomplete);
     }
