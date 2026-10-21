@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 bytes = "1.12.1"
-clap = "4.6.7"
+clap = { version = "4.6.7", features = ["derive"] }
 lru = "0.18.5"
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "net", "time", "sync", "macros", "io-util"] }
 tracing = "0.1.44"

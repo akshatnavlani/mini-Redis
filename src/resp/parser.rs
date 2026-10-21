@@ -180,7 +180,7 @@ enum BulkStringResult<'a>{
     Incomplete,
 }
 
-pub fn parse_bulk_string(input: &[u8], start_position:usize)-> Result<BulkStringResult<'_>,ParseError>{
+fn parse_bulk_string(input: &[u8], start_position:usize)-> Result<BulkStringResult<'_>,ParseError>{
     if start_position>=input.len(){
         return Ok(BulkStringResult::Incomplete)
     }
