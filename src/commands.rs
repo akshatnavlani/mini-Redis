@@ -1,9 +1,14 @@
 // Command validation and dispatch module.
 //
 // Add imports for duration handling, RESP frame types, and the shared store.
+use bytes::Bytes;
 use std::time::Duration;
-use crate::resp::Frame;
-enum Command{
+use std::time::Instant;
+
+use crate::resp::{Frame, Response};
+use crate::store::{self, StoreHandle};
+
+pub enum Command{
     PING,
     GET{key:Vec<u8>},
     SET{key:Vec<u8>,value:Vec<u8>,expiration:Option<Duration>},
@@ -118,47 +123,63 @@ pub fn parse_command(frame: Frame<'_>) -> Result<Command, CommandError>{
 // Description: Execute PING, GET, SET, DEL, EXISTS, EXPIRE, or TTL and map the
 // result to the proper response type.
 // Why it exists: This is the narrow boundary between protocol and storage code.
-// fn dispatch(command:Command,store:StoreHandle)->Response{
-//     match command {
-//         Command::PING => Response::SimpleString("PONG".into()),
-//         Command::GET{key}=>{
-//             let value=store.get(&key);
-//             match value{
-//                 Some(v)=>Response::BulkString(Some(v)),
-//                 None=>Response::BulkString(None),
-//             }
-//         }
-//         Command::SET{key, value, expiration}=>{
-//             let result=store.set(key,value,expiration);
-//             match result{
-//                 Ok(())=>Response::SimpleString("OK".into()),
-//                 Err(_)=>Response::Error("SET failed".into()),
-//             }
-//         }
-//         Command::DEL{keys}=>{
-//             let result=store.delete(&keys);
-//             match result{
-//                 Ok(count)=>Response::Integer(count as i64),
-//                 Err(_)=>Response::Error("DEL failed".into()),
-//             }
-//         }
-//         Command::EXISTS{key}=>{
-//             let exists=store.exists(&key);
-//             Response::Integer(if exists{1}else{0})
-//         }
-//         Command::EXPIRE{key,duration}=>{
-//             let result=store.expire(&key,duration);
-//             match result{
-//                 Ok(updated)=>Response::Integer(if updated{1}else{0}),
-//                 Err(_)=>Response::Error("EXPIRE failed".into()),
-//             }
-//         }
-//         Command::TTL{key}=>{
-//             let ttl=store.ttl(&key);
-//             Response::Integer(ttl as i64)
-//         }
-//     }
-// }
+pub(crate) async fn dispatch(
+    command: Command,
+    store_handle: &StoreHandle,
+) -> Response {
+    match command {
+        Command::PING => Response::SimpleString(Bytes::from_static(b"PONG")),
+        Command::GET { key } => {
+            match store::get(store_handle, &key).await {
+                Some(value) => Response::BulkString(Some(value)),
+                None => Response::BulkString(None),
+            }
+        }
+        Command::SET {
+            key,
+            value,
+            expiration,
+        } => {
+            let expires_at = match expiration {
+                Some(duration) => match Instant::now().checked_add(duration) {
+                    Some(deadline) => Some(deadline),
+                    None => {
+                        return Response::Error(Bytes::from_static(
+                            b"ERR expiration is too large",
+                        ));
+                    }
+                },
+                None => None,
+            };
+
+            store::set(
+                store_handle,
+                key,
+                Bytes::from(value),
+                expires_at,
+            )
+            .await;
+
+            Response::SimpleString(Bytes::from_static(b"OK"))
+        }
+        Command::DEL { keys } => {
+            let deleted_count = store::delete(store_handle, &keys).await;
+            Response::Integer(deleted_count as i64)
+        }
+        Command::EXISTS { key } => {
+            let exists = store::exists(store_handle, &key).await;
+            Response::Integer(if exists { 1 } else { 0 })
+        }
+        Command::EXPIRE { key, expiration } => {
+            let updated = store::expire(store_handle, &key, expiration).await;
+            Response::Integer(if updated { 1 } else { 0 })
+        }
+        Command::TTL { key } => {
+            let ttl = store::ttl(store_handle, &key).await;
+            Response::Integer(ttl)
+        }
+    }
+}
 
 // Function reference: COMMANDS-003
 // Function name: parse_expiration
